@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Exciting mobile trivia game with multiple categories.">
+  <meta name="author" content="Your Name">
+  <title>Trivia Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Home Screen -->
+  <div class="home-container">
+    <h1>Trivia Game</h1>
+    <p>Choose a category:</p>
+    <div class="category-buttons">
+      <button class="category-button" onclick="startGame('General Knowledge')">General Knowledge</button>
+      <button class="category-button" onclick="startGame('Science')">Science</button>
+      <button class="category-button" onclick="startGame('History')">History</button>
+      <button class="category-button" onclick="startGame('Geography')">Geography</button>
+    </div>
+  </div>
+
+  <!-- Game Screen -->
+  <div class="game-container" style="display:none;">
+    <h1>Trivia Game</h1>
+    <div id="question-container">
+      <p id="question">Question will appear here</p>
+      <div id="answers">
+        <button class="answer-button" onclick="checkAnswer(0)">Answer 1</button>
+        <button class="answer-button" onclick="checkAnswer(1)">Answer 2</button>
+        <button class="answer-button" onclick="checkAnswer(2)">Answer 3</button>
+        <button class="answer-button" onclick="checkAnswer(3)">Answer 4</button>
+      </div>
+      <button class="back-button" onclick="goBackHome()">Back to Home</button>
+    </div>
+
+    <div id="result" style="display:none;">
+      <p id="result-message"></p>
+      <button onclick="nextQuestion()">Next Question</button>
+    </div>
+
+    <div id="timer">Time: <span id="time">15</span>s</div>
+    <p>Score: <span id="score">0</span></p>
+  </div>
+
+  <!-- Game Over Screen with Congratulations -->
+  <div class="game-over-container" style="display:none;">
+    <h1>Congratulations!</h1>
+    <p id="final-score-message">Your score: 0</p>
+    <button onclick="goBackHome()">Go Back to Home</button>
+  </div>
+
+  <script>
+    const categories = {
+      "General Knowledge": [
+        { question: "What is the capital of France?", answers: ["Berlin", "Madrid", "Paris", "Rome"], correct: 2 },
+        { question: "What is 2 + 2?", answers: ["3", "4", "5", "6"], correct: 1 }
+      ],
+      "Science": [
+        { question: "What is the chemical symbol for water?", answers: ["O2", "H2O", "CO2", "HO2"], correct: 1 },
+        { question: "What planet is known as the Red Planet?", answers: ["Earth", "Mars", "Jupiter", "Saturn"], correct: 1 }
+      ],
+      "History": [
+        { question: "Who was the first President of the United States?", answers: ["Abraham Lincoln", "George Washington", "Thomas Jefferson", "John Adams"], correct: 1 },
+        { question: "In which year did World War II end?", answers: ["1939", "1945", "1941", "1950"], correct: 1 }
+      ],
+      "Geography": [
+        { question: "What is the largest country by area?", answers: ["USA", "China", "Russia", "India"], correct: 2 },
+        { question: "Which continent is the Sahara Desert located on?", answers: ["Africa", "Asia", "Europe", "Australia"], correct: 0 }
+      ]
+    };
+
+    let currentCategory = "";
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timeRemaining = 15;
+    let timer;
+
+    function startGame(category) {
+      currentCategory = category;
+      currentQuestionIndex = 0;
+      score = 0;
+      timeRemaining = 15;
+      document.querySelector('.home-container').style.display = "none";  // Hide home screen
+      document.querySelector('.game-container').style.display = "block";  // Show game screen
+      document.querySelector('.game-over-container').style.display = "none"; // Hide game over screen
+
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const question = categories[currentCategory][currentQuestionIndex];
+      document.getElementById('question').textContent = question.question;
+      const buttons = document.querySelectorAll('.answer-button');
+      buttons.forEach((button, index) => {
+        button.textContent = question.answers[index];
+        button.disabled = false;
+        button.classList.remove("correct", "wrong");
+      });
+
+      document.getElementById('result').style.display = "none"; // Hide result message
+      startTimer();
+    }
+
+    function startTimer() {
+      timeRemaining = 15; // Reset the timer for every question
+      document.getElementById('time').textContent = timeRemaining;
+      timer = setInterval(function() {
+        timeRemaining--;
+        document.getElementById('time').textContent = timeRemaining;
+        if (timeRemaining <= 0) {
+          clearInterval(timer);
+          checkAnswer(-1); // Show correct answer when time is up
+        }
+      }, 1000);
+    }
+
+    function checkAnswer(selectedIndex) {
+      clearInterval(timer);  // Stop the timer
+      const question = categories[currentCategory][currentQuestionIndex];
+      const buttons = document.querySelectorAll('.answer-button');
+      buttons.forEach(button => button.disabled = true); // Disable all buttons
+
+      let message = "";
+      if (selectedIndex === question.correct) {
+        score++;
+        message = "Correct!";
+        buttons[selectedIndex].classList.add("correct");
+      } else if (selectedIndex === -1) {
+        message = "Time's up! The correct answer was: " + question.answers[question.correct];
+        buttons[question.correct].classList.add("correct");
+      } else {
+        message = "Wrong answer! The correct answer was: " + question.answers[question.correct];
+        buttons[selectedIndex].classList.add("wrong");
+        buttons[question.correct].classList.add("correct");
+      }
+
+      document.getElementById('result-message').textContent = message;
+      document.getElementById('score').textContent = score;
+      document.getElementById('result').style.display = "block";  // Show result
+    }
+
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < categories[currentCategory].length) {
+        loadQuestion();
+      } else {
+        showGameOverScreen();
+      }
+    }
+
+    function showGameOverScreen() {
+      document.querySelector('.game-container').style.display = "none"; // Hide game screen
+      document.querySelector('.game-over-container').style.display = "block"; // Show game over screen
+      document.getElementById('final-score-message').textContent = "Your score: " + score;
+    }
+
+    function goBackHome() {
+      document.querySelector('.home-container').style.display = "block";  // Show home screen
+      document.querySelector('.game-over-container').style.display = "none"; // Hide game over screen
+      document.querySelector('.game-container').style.display = "none"; // Hide game screen
+    }
+  </script>
+</body>
+</html>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .home-container {
+    text-align: center;
+    margin-top: 50px;
+  }
+
+  h1 {
+    color: #333;
+    font-size: 24px;
+  }
+
+  .category-buttons {
+    margin-top: 20px;
+  }
+
+  .category-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+    margin: 10px;
+    font-size: 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 200px;
+  }
+
+  .category-button:hover {
+    background-color: #45a049;
+  }
+
+  .game-container {
+    width: 90%;
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: none;
+  }
+
+  .answer-button {
+    margin: 10px;
+    padding: 15px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .answer-button:hover {
+    background-color: #0056b3;
+  }
+
+  .answer-button.correct {
+    background-color: #4caf50 !important;
+  }
+
+  .answer-button.wrong {
+    background-color: #f44336 !important;
+  }
+
+  #timer {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #e74c3c;
+  }
+
+  #score {
+    font-size: 20px;
+    font-weight: bold;
+    color: #2ecc71;
+  }
+
+  #result {
+    padding-top: 20px;
+  }
+
+  #result-message {
+    font-size: 18px;
+    margin-bottom: 20px;
+    color: #2c3e50;
+  }
+
+  .game-over-container {
+    text-align: center;
+    margin-top: 50px;
+  }
+
+  .game-over-container button {
+    padding: 10px 20px;
+    font-size: 18px;
+    color: white;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .game-over-container button:hover {
+    background-color: #45a049;
+  }
+
+  .back-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #f39c12;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .back-button:hover {
+    background-color: #e67e22;
+  }
+</style>
